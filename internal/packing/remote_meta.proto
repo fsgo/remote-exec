@@ -1,0 +1,21 @@
+syntax = "proto3";
+package packing;
+
+// protoc --go_out=./ remote_meta.proto
+
+option go_package = "../packing";
+
+message Command {
+  string Name=1; // 执行的命令
+  repeated string Args=2; // 命令的参数
+  int32 TimeoutMS =3;// 超时时间，毫秒
+  bytes Stdin=4; // 标准输入
+}
+
+message CommandResult{
+  bytes Stdout=1;
+  bytes Stderr=2;
+  bool Finished=3;
+  int32 ExitCode=4;
+}
+
