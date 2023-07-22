@@ -8,8 +8,8 @@ import (
 	"context"
 	"flag"
 	"log"
-	"net"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/fsgo/fsgo/fsrpc"
@@ -18,19 +18,33 @@ import (
 	"github.com/fsgo/remote-exec/internal/packing"
 )
 
-func Run(addr string) {
+func Run() {
+	parseFlag()
 	args := flag.Args()
 	if len(args) == 0 {
 		log.Fatalln("no command to exec")
 	}
-	conn, err := net.DialTimeout("tcp", addr, 3*time.Second)
+
+	conn, err := config.Dial(time.Minute)
 	checkErr(err)
-
 	defer conn.Close()
-	client := fsrpc.NewClientConn(conn)
 
-	rw := client.MustOpen(context.Background())
+	client := fsrpc.NewClientConn(conn)
+	defer client.Close()
+
+	rw := client.OpenStream()
+
+	sendAuth(rw)
+	sendExec(rw, args)
+}
+
+func sendExec(rw fsrpc.RequestWriter, args []string) {
 	req := fsrpc.NewRequest("exec")
+	req.LogID = strconv.FormatInt(time.Now().UnixNano(), 10)
+	if debug {
+		log.Println("send exec", args, "logid=", req.LogID)
+	}
+
 	py := &packing.Command{
 		Name: args[0],
 		Args: args[1:],
@@ -41,7 +55,7 @@ func Run(addr string) {
 	resp, payloads, err := rr.Response()
 	checkErr(err)
 	if code := resp.GetCode(); code != 0 {
-		log.Fatalln(resp.GetMessage())
+		log.Fatalln("invalid response code", code, resp.GetMessage())
 	}
 	for item := range payloads {
 		bf, err1 := item.Bytes()
@@ -63,6 +77,6 @@ func Run(addr string) {
 
 func checkErr(err error) {
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln("has error:", err)
 	}
 }

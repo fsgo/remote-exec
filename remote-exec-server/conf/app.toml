@@ -1,0 +1,9 @@
+
+Listen = ":8100"
+
+CertFile ="{osenv.Private_CertFile}"
+KeyFile="{osenv.Private_KeyFile}"
+
+[[Users]]
+Name = "hello"
+Psw = "abc"

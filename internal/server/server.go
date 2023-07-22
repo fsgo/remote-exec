@@ -11,15 +11,38 @@ import (
 	"github.com/fsgo/fsgo/fsrpc"
 )
 
+var config = &Config{}
+
+func init() {
+	config.RegisterFlag()
+}
+
 func Run() {
 	flag.Parse()
-	router := fsrpc.NewRouter()
-	router.Register("exec", &Handler{})
-	log.Println("server Listen at:", config.GetAddr())
 
-	var err error
+	c1, err := parserCnf()
+	checkErr(err)
+	config.Merge(c1)
+
+	router := fsrpc.NewRouter()
+
+	auth := serverAuth()
+	auth.RegisterTo(router)
+
+	router.Register("exec", auth.WithInterceptor(&Handler{}))
+	// router.Register("exec",&Handler{})
+
 	defer func() {
 		log.Println("server exit:", err)
 	}()
-	err = fsrpc.ListenAndServe(config.GetAddr(), router)
+	ser := &fsrpc.Server{
+		Router: router,
+	}
+	err = config.Run(ser)
+}
+
+func checkErr(err error) {
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
