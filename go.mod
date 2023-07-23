@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/fsgo/fsconf v0.2.11
 	github.com/fsgo/fsenv v0.4.0
-	github.com/fsgo/fsgo v0.0.7-0.20230722022358-2554377dd565
+	github.com/fsgo/fsgo v0.0.7-0.20230723094518-5a72a064bc4a
 	google.golang.org/protobuf v1.31.0
 )
 

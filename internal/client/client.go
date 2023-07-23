@@ -29,7 +29,7 @@ func Run() {
 	checkErr(err)
 	defer conn.Close()
 
-	client := fsrpc.NewClientConn(conn)
+	client := fsrpc.NewClient(conn)
 	defer client.Close()
 
 	rw := client.OpenStream()
@@ -70,6 +70,7 @@ func sendExec(rw fsrpc.RequestWriter, args []string) {
 			_, _ = os.Stderr.Write(rt.Stderr)
 		}
 		if rt.Finished {
+			_, _ = os.Stderr.Write([]byte("\n"))
 			os.Exit(int(rt.ExitCode))
 		}
 	}
